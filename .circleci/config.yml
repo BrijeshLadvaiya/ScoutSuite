@@ -1,0 +1,37 @@
+version: 2.1
+executors:
+  default:
+    docker:
+    - image: 'circleci/python:3.7.6'
+orbs:
+  aws-cli: circleci/aws-cli@1.0.0
+  scoutsuite:
+    executors:
+      default: aws-cli/default
+    commands:
+      start:
+        steps:
+          - run:
+              name: setup scoutsuite
+              command: |
+                pip install scoutsuite
+                python setup.py aws --no-browser
+                echo SUCCESS: ScoutSuite run successfully.
+jobs:
+  scoutsuite-audit:
+    executor: scoutsuite/default
+    steps:
+    - aws-cli/install
+    - aws-cli/setup:
+        aws-access-key-id: AKIAR4L5SU5D7D3JE37U
+        aws-secret-access-key: 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
+    - scoutsuite/start
+    - store_artifacts:
+        path: scoutsuite-report
+workflows:  
+  scoutsuite:
+    triggers:
+      - schedule:
+          cron: "0 0 1 * *"
+    jobs:
+      - scoutsuite-audit
